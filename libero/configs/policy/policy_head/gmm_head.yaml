@@ -7,6 +7,8 @@ network_kwargs:
     num_modes: 5
     low_eval_noise: false
     activation: "softplus"
+    hidden_activation: "relu"
+    hidden_activation_kwargs: {}
 
 loss_kwargs:
     loss_coef: 1.0

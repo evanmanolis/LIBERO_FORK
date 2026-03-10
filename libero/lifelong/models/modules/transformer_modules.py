@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
+from libero.lifelong.models.modules.activation_modules import get_activation
 
 
 ###############################################################################
@@ -69,12 +70,19 @@ class Attention(nn.Module):
 
 
 class TransformerFeedForwardNN(nn.Module):
-    def __init__(self, dim, hidden_dim, dropout=0.0):
+    def __init__(
+        self,
+        dim,
+        hidden_dim,
+        dropout=0.0,
+        activation="gelu",
+        activation_kwargs=None,
+    ):
         super().__init__()
         # Remember the residual connection
         layers = [
             nn.Linear(dim, hidden_dim),
-            nn.GELU(),
+            get_activation(activation, activation_kwargs=activation_kwargs),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim, dim),
             nn.Dropout(dropout),
@@ -168,6 +176,8 @@ class TransformerDecoder(nn.Module):
         head_output_size,
         mlp_hidden_size,
         dropout,
+        ffn_activation="gelu",
+        ffn_activation_kwargs=None,
         **kwargs
     ):
         super().__init__()
@@ -190,7 +200,11 @@ class TransformerDecoder(nn.Module):
                         ),
                         Norm(input_size),
                         TransformerFeedForwardNN(
-                            input_size, mlp_hidden_size, dropout=dropout
+                            input_size,
+                            mlp_hidden_size,
+                            dropout=dropout,
+                            activation=ffn_activation,
+                            activation_kwargs=ffn_activation_kwargs,
                         ),
                     ]
                 )

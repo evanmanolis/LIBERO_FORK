@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
+from libero.lifelong.models.modules.activation_modules import get_activation
+
 
 ###############################################################################
 #
@@ -22,7 +24,13 @@ class PatchEncoder(nn.Module):
     """
 
     def __init__(
-        self, input_shape, patch_size=[16, 16], embed_size=64, no_patch_embed_bias=False
+        self,
+        input_shape,
+        patch_size=[16, 16],
+        embed_size=64,
+        no_patch_embed_bias=False,
+        activation="relu",
+        activation_kwargs=None,
     ):
         super().__init__()
         C, H, W = input_shape
@@ -39,7 +47,9 @@ class PatchEncoder(nn.Module):
             nn.BatchNorm2d(
                 64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
             ),
-            nn.ReLU(inplace=True),
+            get_activation(
+                activation, activation_kwargs=activation_kwargs, inplace=True
+            ),
         )
         self.proj = nn.Conv2d(
             64,

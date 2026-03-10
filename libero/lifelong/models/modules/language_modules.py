@@ -3,6 +3,8 @@ This file contains modules that encode language task embeddings.
 """
 import torch.nn as nn
 
+from libero.lifelong.models.modules.activation_modules import get_activation
+
 
 class IdentityEncoder(nn.Module):
     """
@@ -30,14 +32,26 @@ class MLPEncoder(nn.Module):
         h: latent embedding (B, H)
     """
 
-    def __init__(self, input_size, hidden_size, output_size, num_layers):
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        output_size,
+        num_layers,
+        activation="relu",
+        activation_kwargs=None,
+    ):
         super().__init__()
         assert num_layers >= 1, "[error] num_layers < 1"
         sizes = [input_size] + [hidden_size] * (num_layers - 1) + [output_size]
         layers = []
         for i in range(num_layers - 1):
             layers.append(nn.Linear(sizes[i], sizes[i + 1]))
-            layers.append(nn.ReLU(inplace=True))
+            layers.append(
+                get_activation(
+                    activation, activation_kwargs=activation_kwargs, inplace=True
+                )
+            )
         layers.append(nn.Linear(sizes[-2], sizes[-1]))
         self.projection = nn.Sequential(*layers)
 

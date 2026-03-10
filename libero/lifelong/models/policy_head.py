@@ -4,15 +4,34 @@ import torch.distributions as D
 import torch.nn as nn
 import torch.nn.functional as F
 
+from libero.lifelong.models.modules.activation_modules import get_activation
+
 
 class DeterministicHead(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size=1024, num_layers=2):
+    def __init__(
+        self,
+        input_size,
+        output_size,
+        hidden_size=1024,
+        num_layers=2,
+        action_squash=False,
+        hidden_activation="relu",
+        hidden_activation_kwargs=None,
+    ):
 
         super().__init__()
+        self.action_squash = action_squash
         sizes = [input_size] + [hidden_size] * num_layers + [output_size]
         layers = []
         for i in range(num_layers):
-            layers += [nn.Linear(sizes[i], sizes[i + 1]), nn.ReLU()]
+            layers += [
+                nn.Linear(sizes[i], sizes[i + 1]),
+                get_activation(
+                    hidden_activation,
+                    activation_kwargs=hidden_activation_kwargs,
+                    inplace=False,
+                ),
+            ]
         layers += [nn.Linear(sizes[-2], sizes[-1])]
 
         if self.action_squash:
@@ -36,6 +55,8 @@ class GMMHead(nn.Module):
         min_std=0.0001,
         num_modes=5,
         activation="softplus",
+        hidden_activation="relu",
+        hidden_activation_kwargs=None,
         low_eval_noise=False,
         # loss_kwargs
         loss_coef=1.0,
@@ -49,15 +70,24 @@ class GMMHead(nn.Module):
             sizes = [input_size] + [hidden_size] * num_layers
             layers = []
             for i in range(num_layers):
-                layers += [nn.Linear(sizes[i], sizes[i + 1]), nn.ReLU()]
+                layers += [
+                    nn.Linear(sizes[i], sizes[i + 1]),
+                    get_activation(
+                        hidden_activation,
+                        activation_kwargs=hidden_activation_kwargs,
+                        inplace=False,
+                    ),
+                ]
             layers += [nn.Linear(sizes[-2], sizes[-1])]
             self.share = nn.Sequential(*layers)
+            head_input_size = hidden_size
         else:
             self.share = nn.Identity()
+            head_input_size = input_size
 
-        self.mean_layer = nn.Linear(hidden_size, output_size * num_modes)
-        self.logstd_layer = nn.Linear(hidden_size, output_size * num_modes)
-        self.logits_layer = nn.Linear(hidden_size, num_modes)
+        self.mean_layer = nn.Linear(head_input_size, output_size * num_modes)
+        self.logstd_layer = nn.Linear(head_input_size, output_size * num_modes)
+        self.logits_layer = nn.Linear(head_input_size, num_modes)
 
         self.low_eval_noise = low_eval_noise
         self.loss_coef = loss_coef

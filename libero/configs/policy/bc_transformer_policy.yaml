@@ -1,6 +1,8 @@
 policy_type: BCTransformerPolicy 
 extra_num_layers: 0
 extra_hidden_size: 128
+extra_activation: "relu"
+extra_activation_kwargs: {}
 embed_size: 64
 
 transformer_input_size: null
@@ -9,6 +11,8 @@ transformer_num_heads: 6
 transformer_head_output_size: 64
 transformer_mlp_hidden_size: 256
 transformer_dropout: 0.1
+transformer_ffn_activation: "gelu"
+transformer_ffn_activation_kwargs: {}
 transformer_max_seq_len: 10
 
 defaults:

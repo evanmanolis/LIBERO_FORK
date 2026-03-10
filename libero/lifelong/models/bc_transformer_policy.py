@@ -5,6 +5,7 @@ import torch.nn as nn
 from libero.lifelong.models.modules.rgb_modules import *
 from libero.lifelong.models.modules.language_modules import *
 from libero.lifelong.models.modules.transformer_modules import *
+from libero.lifelong.models.modules.activation_modules import get_activation
 from libero.lifelong.models.base_policy import BasePolicy
 from libero.lifelong.models.policy_head import *
 
@@ -25,6 +26,8 @@ class ExtraModalityTokens(nn.Module):
         extra_num_layers=0,
         extra_hidden_size=64,
         extra_embedding_size=32,
+        activation="relu",
+        activation_kwargs=None,
     ):
         """
         This is a class that maps all extra modality inputs into tokens of the same size
@@ -58,7 +61,9 @@ class ExtraModalityTokens(nn.Module):
                 for i in range(1, extra_num_layers):
                     layers += [
                         nn.Linear(extra_hidden_size, extra_hidden_size),
-                        nn.ReLU(inplace=True),
+                        get_activation(
+                            activation, activation_kwargs=activation_kwargs, inplace=True
+                        ),
                     ]
                 layers += [nn.Linear(extra_hidden_size, extra_embedding_size)]
             else:
@@ -213,6 +218,8 @@ class BCTransformerPolicy(BasePolicy):
             extra_num_layers=policy_cfg.extra_num_layers,
             extra_hidden_size=policy_cfg.extra_hidden_size,
             extra_embedding_size=embed_size,
+            activation=getattr(policy_cfg, "extra_activation", "relu"),
+            activation_kwargs=getattr(policy_cfg, "extra_activation_kwargs", None),
         )
 
         ### 4. define temporal transformer
@@ -228,6 +235,10 @@ class BCTransformerPolicy(BasePolicy):
             head_output_size=policy_cfg.transformer_head_output_size,
             mlp_hidden_size=policy_cfg.transformer_mlp_hidden_size,
             dropout=policy_cfg.transformer_dropout,
+            ffn_activation=getattr(policy_cfg, "transformer_ffn_activation", "gelu"),
+            ffn_activation_kwargs=getattr(
+                policy_cfg, "transformer_ffn_activation_kwargs", None
+            ),
         )
 
         policy_head_kwargs = policy_cfg.policy_head.network_kwargs

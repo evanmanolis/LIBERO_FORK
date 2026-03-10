@@ -4,3 +4,5 @@ network_kwargs:
     hidden_size: 128
     output_size: 128
     num_layers: 1
+    activation: "relu"
+    activation_kwargs: {}

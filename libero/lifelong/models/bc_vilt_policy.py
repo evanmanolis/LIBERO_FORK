@@ -86,6 +86,12 @@ class BCViLTPolicy(BasePolicy):
             head_output_size=policy_cfg.spatial_transformer_head_output_size,
             mlp_hidden_size=policy_cfg.spatial_transformer_mlp_hidden_size,
             dropout=policy_cfg.spatial_transformer_dropout,
+            ffn_activation=getattr(
+                policy_cfg, "spatial_transformer_ffn_activation", "gelu"
+            ),
+            ffn_activation_kwargs=getattr(
+                policy_cfg, "spatial_transformer_ffn_activation_kwargs", None
+            ),
         )
 
         if policy_cfg.spatial_down_sample:
@@ -102,6 +108,8 @@ class BCViLTPolicy(BasePolicy):
             extra_num_layers=policy_cfg.extra_num_layers,
             extra_hidden_size=policy_cfg.extra_hidden_size,
             extra_embedding_size=temporal_embed_size,
+            activation=getattr(policy_cfg, "extra_activation", "relu"),
+            activation_kwargs=getattr(policy_cfg, "extra_activation_kwargs", None),
         )
         num_extra = self.extra_encoder.num_extra
 
@@ -126,6 +134,10 @@ class BCViLTPolicy(BasePolicy):
             head_output_size=policy_cfg.transformer_head_output_size,
             mlp_hidden_size=policy_cfg.transformer_mlp_hidden_size,
             dropout=policy_cfg.transformer_dropout,
+            ffn_activation=getattr(policy_cfg, "transformer_ffn_activation", "gelu"),
+            ffn_activation_kwargs=getattr(
+                policy_cfg, "transformer_ffn_activation_kwargs", None
+            ),
         )
 
         policy_head_kwargs = policy_cfg.policy_head.network_kwargs
