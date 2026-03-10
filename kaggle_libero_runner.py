@@ -409,6 +409,11 @@ def maybe_download_datasets(cfg: RunnerConfig, py_bin: str, env: Dict[str, str])
 
 
 def write_setup_meta(cfg: RunnerConfig, py_bin: str, benchmark_root: str) -> None:
+    config_dict = asdict(cfg)
+    for key, value in list(config_dict.items()):
+        if isinstance(value, set):
+            config_dict[key] = sorted(value)
+
     payload = {
         "PY": py_bin,
         "REPO_DIR": cfg.repo_dir,
@@ -416,7 +421,7 @@ def write_setup_meta(cfg: RunnerConfig, py_bin: str, benchmark_root: str) -> Non
         "DATASETS_ROOT": cfg.datasets_root,
         "RUNS_ROOT": cfg.runs_root,
         "benchmark_root": benchmark_root,
-        "config": asdict(cfg),
+        "config": config_dict,
     }
     pathlib.Path(cfg.meta_path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"Setup complete. Meta: {cfg.meta_path}")
