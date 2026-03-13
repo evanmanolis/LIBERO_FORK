@@ -113,33 +113,6 @@ class CommandError(RuntimeError):
     pass
 
 
-def normalize_hydra_overrides(overrides: Sequence[str]) -> List[str]:
-    """Prefix known activation kwargs leaf overrides with '+' for Hydra.
-
-    These config nodes default to empty dicts in LIBERO. Hydra requires '+'
-    when adding new keys under an existing empty mapping.
-    """
-    add_key_prefixes = (
-        "policy.transformer_ffn_activation_kwargs.",
-        "policy.spatial_transformer_ffn_activation_kwargs.",
-        "policy.extra_activation_kwargs.",
-        "policy.language_encoder.network_kwargs.activation_kwargs.",
-        "policy.policy_head.network_kwargs.hidden_activation_kwargs.",
-        "policy.image_encoder.network_kwargs.activation_kwargs.",
-    )
-
-    normalized: List[str] = []
-    for override in overrides:
-        if override.startswith(("+", "++", "~")):
-            normalized.append(override)
-            continue
-        if any(override.startswith(prefix) for prefix in add_key_prefixes):
-            normalized.append("+" + override)
-        else:
-            normalized.append(override)
-    return normalized
-
-
 def print_header(title: str) -> None:
     line = "=" * 80
     print(f"\n{line}\n{title}\n{line}\n", flush=True)
@@ -868,7 +841,7 @@ def make_config_from_args(args: argparse.Namespace) -> RunnerConfig:
         rebuild_env=args.rebuild_env,
         snapshot_period_sec=args.snapshot_period_sec,
         package_name=args.package_name,
-        extra_overrides=normalize_hydra_overrides(args.extra_override),
+        extra_overrides=args.extra_override,
         install_os_packages=not args.skip_os_packages,
         download_datasets=not args.skip_dataset_download,
     )
